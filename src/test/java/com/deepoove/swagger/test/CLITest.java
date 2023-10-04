@@ -89,7 +89,7 @@ public class CLITest {
     @Test
     public void testMain() {
         CLI cli = new CLI();
-        String[] argv = { "-old", "petstore_v2_1.json", "-new", "petstore_v2_2.json" };
+        String[] argv = { "-old", "ycj-new_post1.json", "-new", "ycj-new_post2.json", "-output-mode", "html" };
         JCommander jCommander = JCommander.newBuilder().addObject(cli).build();
         jCommander.parse(argv);
         cli.run(jCommander);

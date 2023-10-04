@@ -13,11 +13,9 @@ import com.deepoove.swagger.diff.model.ElProperty;
 
 import io.swagger.models.ArrayModel;
 import io.swagger.models.Model;
+import io.swagger.models.ModelImpl;
 import io.swagger.models.RefModel;
-import io.swagger.models.properties.ArrayProperty;
-import io.swagger.models.properties.Property;
-import io.swagger.models.properties.RefProperty;
-import io.swagger.models.properties.StringProperty;
+import io.swagger.models.properties.*;
 
 /**
  * compare two model
@@ -85,7 +83,7 @@ public class ModelDiff {
             Property left = leftProperties.get(key);
             Property right = rightProperties.get(key);
             Model leftSubModel = findModel(left, oldDedinitions);
-            Model rightSubModel = findModel(left, newDedinitions);
+            Model rightSubModel = findModel(right, newDedinitions);
             if (leftSubModel != null || rightSubModel != null) {
                 diff(leftSubModel, rightSubModel, buildElString(parentEl, key),
                         copyAndAdd(visited, leftModel, rightModel));
@@ -135,6 +133,19 @@ public class ModelDiff {
             diffProperty.setNewEnums(enumDiff.getIncreased() != null && !enumDiff.getIncreased().isEmpty());
             diffProperty.setRemovedEnums(enumDiff.getMissing() != null && !enumDiff.getMissing().isEmpty());
         }
+        String leftType = left.getType();
+        String rightType = right.getType();
+        Boolean leftRequire = left.getRequired();
+        Boolean rightRequire = right.getRequired();
+        if (!leftType.equals(rightType)) {
+            diffProperty.setTypeChange(true);
+        }
+        if (!leftRequire.equals(rightRequire)){
+            diffProperty.setRequiredChange(true);
+        }
+        // 增加left,right property
+        diffProperty.setLeftProperty(left);
+        diffProperty.setRightProperty(right);
         return diffProperty;
     }
 
@@ -154,6 +165,20 @@ public class ModelDiff {
     }
 
     private Model findModel(Property property, Map<String, Model> modelMap) {
+        if (property instanceof ObjectProperty) {
+            ModelImpl model = new ModelImpl();
+            model.setType(property.getType());
+            model.setProperties(((ObjectProperty) property).getProperties());
+            model.setName(property.getName());
+            model.setFormat(property.getFormat());
+            model.setExample(property.getExample());
+            model.setXml(property.getXml());
+            model.setRequired(((ObjectProperty) property).getRequiredProperties());
+            model.setDescription(property.getDescription());
+            model.setTitle(property.getTitle());
+            model.setAllowEmptyValue(property.getAllowEmptyValue());
+            return model;
+        }
         String modelName = null;
         if (property instanceof RefProperty) {
             modelName = ((RefProperty) property).getSimpleRef();

@@ -16,8 +16,29 @@ public class ElProperty {
 
     // optional change metadata
     private boolean isTypeChange;
+    private boolean isRequiredChange;
     private boolean newEnums;
     private boolean removedEnums;
+    private Property leftProperty;
+    private Property rightProperty;
+
+
+
+    public Property getLeftProperty() {
+        return leftProperty;
+    }
+
+    public Property getRightProperty() {
+        return rightProperty;
+    }
+
+    public void setLeftProperty(Property leftProperty) {
+        this.leftProperty = leftProperty;
+    }
+
+    public void setRightProperty(Property rightProperty) {
+        this.rightProperty = rightProperty;
+    }
 
     public Property getProperty() {
         return property;
@@ -57,5 +78,13 @@ public class ElProperty {
 
     public void setRemovedEnums(boolean removedEnums) {
         this.removedEnums = removedEnums;
+    }
+
+    public boolean isRequiredChange() {
+        return isRequiredChange;
+    }
+
+    public void setRequiredChange(boolean requiredChange) {
+        isRequiredChange = requiredChange;
     }
 }

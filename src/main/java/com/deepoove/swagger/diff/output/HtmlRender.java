@@ -3,7 +3,10 @@ package com.deepoove.swagger.diff.output;
 import com.deepoove.swagger.diff.SwaggerDiff;
 import com.deepoove.swagger.diff.model.*;
 import io.swagger.models.HttpMethod;
+import io.swagger.models.parameters.BodyParameter;
+import io.swagger.models.parameters.FormParameter;
 import io.swagger.models.parameters.Parameter;
+import io.swagger.models.parameters.QueryParameter;
 import io.swagger.models.properties.Property;
 import j2html.tags.ContainerTag;
 
@@ -47,7 +50,7 @@ public class HtmlRender implements Render {
     public String renderHtml(ContainerTag ol_new, ContainerTag ol_miss, ContainerTag ol_changed, ContainerTag p_versions) {
         ContainerTag html = html().attr("lang", "en").with(
             head().with(
-                meta().withCharset("utf-8"),
+                meta().withCharset("gbk"),
                 title(title),
                 script(rawHtml("function showHide(id){if(document.getElementById(id).style.display==\'none\'){document.getElementById(id).style.display=\'block\';document.getElementById(\'btn_\'+id).innerHTML=\'&uArr;\';}else{document.getElementById(id).style.display=\'none\';document.getElementById(\'btn_\'+id).innerHTML=\'&dArr;\';}return true;}")).withType("text/javascript"),
                 link().withRel("stylesheet").withHref(linkCss)
@@ -151,7 +154,9 @@ public class HtmlRender implements Render {
             ul.with(li_missingProp(prop));
         }
         for (ElProperty prop : chgProps) {
-            ul.with(li_changedProp(prop));
+            Property propertyLeft = prop.getLeftProperty();
+            Property propertyRight = prop.getRightProperty();
+            ul.with(li_changedProp(prop, propertyLeft, propertyRight));
         }
         return ul;
     }
@@ -170,7 +175,7 @@ public class HtmlRender implements Render {
         List<String> changeDetails = new ArrayList<>();
         String changeDetailsHeading = "";
         if (prop.isTypeChange()) {
-            changeDetails.add("Data Type");
+            changeDetails.add("Data Type Change");
         }
         if (prop.isNewEnums()) {
             changeDetails.add("Added Enum");
@@ -183,6 +188,99 @@ public class HtmlRender implements Render {
         }
         return li().withText("Change " + prop.getEl()).with(span(changeDetailsHeading).withClass("comment"));
     }
+
+    private ContainerTag li_changedProp(ElProperty prop, QueryParameter left, QueryParameter right) {
+        List<String> changeDetails = new ArrayList<>();
+        String changeDetailsHeading = "";
+        if (prop.isTypeChange()) {
+            String leftType = left.getType();
+            String rigthtType = right.getType();
+            changeDetails.add(String.format("Data Type Change: %s -> %s", leftType, rigthtType));
+        }
+        if (prop.isNewEnums()) {
+            changeDetails.add("Added Enum");
+        }
+        if (prop.isRemovedEnums()) {
+            changeDetails.add("Removed Enum");
+        }
+        if (! changeDetails.isEmpty()) {
+            changeDetailsHeading = " (" + String.join(", ", changeDetails) + ")";
+        }
+        return li().withText("Change " + prop.getEl()).with(span(changeDetailsHeading).withClass("comment"));
+    }
+
+    private ContainerTag li_changedProp(ElProperty prop, BodyParameter left, BodyParameter right) {
+        List<String> changeDetails = new ArrayList<>();
+        String changeDetailsHeading = "";
+        if (prop.isTypeChange()) {
+//            String leftType = left.getType();
+//            String rigthtType = right.getType();
+//            changeDetails.add(String.format("Data Type Change: %s -> %s", leftType, rigthtType));
+            System.out.println(1);
+        }
+        if (prop.isNewEnums()) {
+            changeDetails.add("Added Enum");
+        }
+        if (prop.isRemovedEnums()) {
+            changeDetails.add("Removed Enum");
+        }
+        if (! changeDetails.isEmpty()) {
+            changeDetailsHeading = " (" + String.join(", ", changeDetails) + ")";
+        }
+        return li().withText("Change " + prop.getEl()).with(span(changeDetailsHeading).withClass("comment"));
+    }
+
+    private ContainerTag li_changedProp(ElProperty prop, FormParameter left, FormParameter right) {
+        List<String> changeDetails = new ArrayList<>();
+        String changeDetailsHeading = "";
+        if (prop.isTypeChange()) {
+            String leftType = left.getType();
+            String rigthtType = right.getType();
+            changeDetails.add(String.format("Data Type Change: %s -> %s", leftType, rigthtType));
+        }
+        if (prop.isNewEnums()) {
+            changeDetails.add("Added Enum");
+        }
+        if (prop.isRemovedEnums()) {
+            changeDetails.add("Removed Enum");
+        }
+        if (! changeDetails.isEmpty()) {
+            changeDetailsHeading = " (" + String.join(", ", changeDetails) + ")";
+        }
+        return li().withText("Change " + prop.getEl()).with(span(changeDetailsHeading).withClass("comment"));
+    }
+
+    private ContainerTag li_changedProp(ElProperty prop, Property left, Property right) {
+        List<String> changeDetails = new ArrayList<>();
+        String changeDetailsHeading = "";
+        if (prop.isTypeChange()) {
+            String leftType = left.getType();
+            String rigthtType = right.getType();
+            changeDetails.add(String.format("Data Type Change: %s -> %s", leftType, rigthtType));
+        }
+        if (prop.isRequiredChange()) {
+            Boolean leftRequire = left.getRequired();
+            Boolean rightRequire = right.getRequired();
+            changeDetails.add(String.format("Data Require Change: %s -> %s", leftRequire, rightRequire));
+        }
+        if (prop.isNewEnums()) {
+            changeDetails.add("Added Enum");
+        }
+        if (prop.isRemovedEnums()) {
+            changeDetails.add("Removed Enum");
+        }
+        String leftDesc = left.getDescription();
+        String rightDesc = right.getDescription();
+        if (!leftDesc.equals(rightDesc)) {
+            changeDetails.add(String.format("Data  Description Change : %s -> %s", leftDesc, rightDesc));
+        }
+        if (! changeDetails.isEmpty()) {
+            changeDetailsHeading = " (" + String.join(", ", changeDetails) + ")";
+        }
+        return li().withText("Change " + prop.getEl()).with(span(changeDetailsHeading).withClass("comment"));
+    }
+
+
 
     private ContainerTag ul_param(ChangedOperation changedOperation) {
         List<Parameter> addParameters = changedOperation.getAddParameters();
@@ -212,9 +310,30 @@ public class HtmlRender implements Render {
         }
         for (ChangedParameter param : changedParameters) {
             List<ElProperty> changed = param.getChanged();
-            for (ElProperty prop : changed) {
-                ul.with(li_changedProp(prop));
+            if (param.getLeftParameter() instanceof QueryParameter) {
+                QueryParameter leftQueryParameter = (QueryParameter) param.getLeftParameter();
+                QueryParameter rightQueryParameter = (QueryParameter) param.getRightParameter();
+                for (ElProperty prop : changed) {
+                    ul.with(li_changedProp(prop, leftQueryParameter, rightQueryParameter));
+                }
+            } else if (param.getLeftParameter() instanceof FormParameter) {
+                FormParameter leftQueryParameter = (FormParameter) param.getLeftParameter();
+                FormParameter rightQueryParameter = (FormParameter) param.getRightParameter();
+                for (ElProperty prop : changed) {
+                    ul.with(li_changedProp(prop, leftQueryParameter, rightQueryParameter));
+                }
+            } else if (param.getLeftParameter() instanceof BodyParameter){
+                for (ElProperty prop : changed) {
+                    Property propertyLeft = prop.getLeftProperty();
+                    Property propertyRight = prop.getRightProperty();
+                    ul.with(li_changedProp(prop,propertyLeft,propertyRight));
+                }
+            } else {
+                for (ElProperty prop : changed) {
+                    ul.with(li_changedProp(prop));
+                }
             }
+
         }
         for (Parameter param : delParameters) {
             ul.with(li_missingParam(param));

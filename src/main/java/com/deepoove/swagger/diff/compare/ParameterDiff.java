@@ -84,7 +84,11 @@ public class ParameterDiff {
                     ElProperty elProperty = new ElProperty();
                     elProperty.setEl(rightPara.getName());
                     elProperty.setProperty(mapToProperty(rightPara));
+                    String leftType = ((AbstractSerializableParameter<?>) leftPara).getType();
+                    String rightType = ((AbstractSerializableParameter<?>) rightPara).getType();
+                    elProperty.setTypeChange(!leftType.equals(rightType));
                     changedParameter.setChanged(Lists.newArrayList(elProperty));
+
                 }
             }
 
